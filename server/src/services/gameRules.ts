@@ -110,9 +110,9 @@ export class GameRules {
     }
 
     if (playersLeaving.length > 0) {
-      game.lobbySlots = remainingSlots.map((slot, index) => ({
+      game.lobbySlots = remainingSlots.map((slot) => ({
         ...slot,
-        playerId: index,
+        playerId: slot.playerId, // keep existing playerId
         status: 'ready' as const,
         active: true,
         eliminated: false,
