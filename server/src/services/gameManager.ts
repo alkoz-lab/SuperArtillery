@@ -470,6 +470,8 @@ export class GameManager {
       return;
     }
 
+    game.lobbySlots = game.lobbySlots.filter(slot => slot.status === 'ready');
+
     console.log(
       `🎮 Game ${game.id} started: ${game.lobbySlots.filter(slot => slot.active).map(slot => slot.session.name).join(' vs ')}`
     );

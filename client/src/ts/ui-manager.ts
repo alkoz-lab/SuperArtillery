@@ -413,7 +413,7 @@ export class UIManager {
     this.rematchPlayers.replaceChildren();
     players.forEach(player => {
       const item = document.createElement('li');
-      item.textContent = `${player.playerName} ${player.answer === 'play_again' ? 'ready' : player.answer === 'had_enough' ? 'had enough' : 'not sure'}`;
+      item.textContent = `${player.playerName} ${player.answer === 'play_again' ? ' ✅' : player.answer === 'had_enough' ? ' ❌' : ' ❔'}`;
       this.rematchPlayers!.appendChild(item);
     });
   }
@@ -439,10 +439,10 @@ export class UIManager {
     slots.forEach((slot) => {
       const item = document.createElement('li');
       item.textContent = slot.status === 'waiting'
-        ? 'Waiting...'
+        ? ' ⏳'
         : slot.status === 'skipped'
-          ? 'Skipped'
-          : `${slot.name ?? 'Player'} is ready`;
+          ? ' 🚫'
+          : `${slot.name ?? 'Player'} ✅`;
       this.lobbySlots.appendChild(item);
     });
     this.skipWaitingButton.hidden = !canSkipWaiting;
