@@ -10,7 +10,7 @@ describe('InvitationService', () => {
 
     expect('error' in result).toBe(false);
     if (!('error' in result)) {
-      expect(result.inviteUrl).toMatch(/^https:\/\/example\.com\/SuperArtillery\/\?invite=/);
+      expect(result.inviteUrl).toMatch(/^https:\/\/example\.com\/SuperArtillery\/\?server=http%3A%2F%2Flocalhost%3A3000&invite=/);
       expect(result.playerToken).toBeTruthy();
       expect(result.inviteCode).toHaveLength(4);
     }

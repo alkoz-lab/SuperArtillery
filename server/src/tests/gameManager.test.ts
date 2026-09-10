@@ -47,7 +47,7 @@ describe('GameManager', () => {
 
       if (!('error' in result)) {
         expect(result.inviteUrl).toContain('invite=');
-        expect(result.inviteUrl).toContain('?invite=');
+        expect(result.inviteUrl).toContain('&invite=');
         expect(result.inviteCode).not.toBe(result.playerToken);
         expect(result.inviteCode.length).toBe(4);
       } else {
