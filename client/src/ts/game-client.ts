@@ -41,7 +41,7 @@ export class GameClient {
   private onGameStartCallback: ((gameId: string, battlefield: BattlefieldConfig) => void) | null = null;
   private onGameOverCallback: ((winnerId: number, didIWin: boolean) => void) | null = null;
   private onPlayerHitCallback: ((playerId: number, playerName: string) => void) | null = null;
-  private onRematchStatusCallback: ((playersAnswered: number, requiredPlayers: number, players: Array<{ playerId: number; playerName: string; answer?: 'play_again' | 'had_enough' | 'not_sure' }>) => void) | null = null;
+  private onRematchStatusCallback: ((answered: number, requiredPlayers: number, players: Array<{ playerId: number; playerName: string; answer?: 'play_again' | 'had_enough' | 'not_sure' }>) => void) | null = null;
   private onLobbyStatusCallback: ((status: GameStatusResponse) => void) | null = null;
 
   constructor(apiBaseUrl: string, wsBaseUrl: string, game: Game) {
@@ -347,11 +347,11 @@ export class GameClient {
       case 'rematch_status':
         if (this.onRematchStatusCallback) {
           const legacyStatus = message as typeof message & { playersReady?: number };
-          const playersAnswered = message.playersAnswered ?? legacyStatus.playersReady ?? 0;
+          const answered = message.answered ?? legacyStatus.playersReady ?? 0;
           const players = (message.players ?? []).map(player => ({ playerId: player.playerId, playerName: player.name, answer: player.answer }));
           this.onRematchStatusCallback.length <= 1
-            ? (this.onRematchStatusCallback as unknown as (playersAnswered: number) => void)(playersAnswered)
-            : this.onRematchStatusCallback(playersAnswered, message.required, players);
+            ? (this.onRematchStatusCallback as unknown as (answered: number) => void)(answered)
+            : this.onRematchStatusCallback(answered, message.required, players);
         }
         break;
 
@@ -397,7 +397,7 @@ export class GameClient {
     this.onPlayerHitCallback = callback;
   }
 
-  public onRematchStatus(callback: (playersAnswered: number, requiredPlayers: number, players: Array<{ playerId: number; playerName: string; answer?: 'play_again' | 'had_enough' | 'not_sure' }>) => void): void {
+  public onRematchStatus(callback: (answered: number, requiredPlayers: number, players: Array<{ playerId: number; playerName: string; answer?: 'play_again' | 'had_enough' | 'not_sure' }>) => void): void {
     this.onRematchStatusCallback = callback;
   }
 

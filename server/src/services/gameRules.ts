@@ -9,8 +9,8 @@ export type FireTransition =
   | { kind: 'miss'; nextPlayerId: number };
 
 export type RematchTransition =
-  | { kind: 'waiting'; playersAnswered: number; playersReady: number; answers: Array<import('../types/private-game').RematchAnswer | null> }
-  | { kind: 'started'; playersAnswered: number; playersReady: number; battlefield: Battlefield; round: number; answers: Array<import('../types/private-game').RematchAnswer | null> };
+  | { kind: 'waiting'; answered: number; playersReady: number; answers: Array<import('../types/private-game').RematchAnswer | null> }
+  | { kind: 'started'; answered: number; playersReady: number; battlefield: Battlefield; round: number; answers: Array<import('../types/private-game').RematchAnswer | null> };
 
 export class GameRules {
   public startIfReady(game: PrivateGame, now: number = Date.now()): { battlefield: Battlefield } | null {
@@ -90,11 +90,11 @@ export class GameRules {
     game.lastActivityAt = now;
 
     const rematchAnswers = game.rematchAnswers ?? slots.map(() => null);
-    const playersAnswered = rematchAnswers.filter(value => value !== null).length;
+    const answered = rematchAnswers.filter(value => value !== null).length;
     const playersReady = game.rematchReady.filter(Boolean).length;
     const answerSnapshot = [...rematchAnswers];
-    if (playersAnswered < slots.length) {
-      return { kind: 'waiting', playersAnswered, playersReady, answers: answerSnapshot };
+    if (answered < slots.length) {
+      return { kind: 'waiting', answered, playersReady, answers: answerSnapshot };
     }
 
     const remainingSlots = slots.filter((_, index) => rematchAnswers[index] === 'play_again');
@@ -106,7 +106,7 @@ export class GameRules {
       if (remainingSlots.length === 1) {
         game.status = 'finished';
       }
-      return { kind: 'waiting', playersAnswered, playersReady: remainingSlots.length, answers: answerSnapshot };
+      return { kind: 'waiting', answered, playersReady: remainingSlots.length, answers: answerSnapshot };
     }
 
     if (playersLeaving.length > 0) {
@@ -142,7 +142,7 @@ export class GameRules {
 
     return {
       kind: 'started',
-      playersAnswered,
+      answered,
       playersReady: remainingSlots.length,
       battlefield: game.battlefield,
       round: game.round,

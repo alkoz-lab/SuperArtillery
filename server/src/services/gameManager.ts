@@ -518,7 +518,7 @@ export class GameManager {
   ): {
     success: true;
     answer: import('../types/private-game').RematchAnswer;
-    playersAnswered: number;
+    answered: number;
     playersReady: number;
     required: number;
     players: Array<{ playerId: number; name: string; answer?: import('../types/private-game').RematchAnswer }>;
@@ -566,7 +566,7 @@ export class GameManager {
     const answers = transition.answers ?? game.rematchAnswers ?? [];
     const statusMessage: RematchStatusMessage = {
       type: 'rematch_status',
-      playersAnswered: transition.playersAnswered,
+      answered: transition.answered,
       required: game.lobbySlots.length,
       players: game.lobbySlots.map(slot => ({
         playerId: slot.playerId,
@@ -588,7 +588,7 @@ export class GameManager {
     return {
       success: true,
       answer,
-      playersAnswered: transition.playersAnswered,
+      answered: transition.answered,
       playersReady: transition.playersReady,
       required: game.lobbySlots.length,
       players: statusMessage.players,

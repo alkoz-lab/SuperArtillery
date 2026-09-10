@@ -610,7 +610,7 @@ export interface components {
         RematchResponse: {
             /** @enum {string} */
             answer: "play_again" | "had_enough" | "not_sure";
-            playersAnswered: number;
+            answered: number;
             required: number;
             /** @description Whether every player chose play_again and a new round started */
             roundStarted: boolean;
@@ -722,7 +722,7 @@ export interface components {
              * @enum {string}
              */
             type: "rematch_status";
-            playersAnswered: number;
+            answered: number;
             required: number;
             players: components["schemas"]["RematchPlayerStatus"][];
         };

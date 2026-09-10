@@ -223,7 +223,7 @@ export function createApiRouter(game: GameManager): Router {
 
     return res.status(HTTP_STATUS.OK).json({
       answer: result.answer,
-      playersAnswered: result.playersAnswered,
+      answered: result.answered,
       playersReady: result.playersReady,
       required: result.required,
       players: result.players,

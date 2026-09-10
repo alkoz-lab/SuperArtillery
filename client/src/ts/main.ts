@@ -321,10 +321,10 @@ function wireGameClientEvents(client: GameClient): void {
     applyPendingPresentation();
   });
 
-  client.onRematchStatus((playersAnswered, requiredPlayers, players) => {
+  client.onRematchStatus((answered, requiredPlayers, players) => {
     uiManager.renderRematchStatus(players);
-    uiManager.setRematchWaiting(playersAnswered);
-    uiManager.setMessage(`Rematch responses (${playersAnswered}/${requiredPlayers})`);
+    uiManager.setRematchWaiting(answered);
+    uiManager.setMessage(`Rematch responses (${answered}/${requiredPlayers})`);
   });
 }
 
