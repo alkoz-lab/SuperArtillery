@@ -5,7 +5,7 @@ import { checkCastleCollision } from '../utils/physics';
 import { calculateCastleHitTime, calculateCastleHits } from '../utils/shotResolver';
 
 function createFlatBattlefield() {
-  const battlefield = createBattlefield(1);
+  const battlefield = createBattlefield(1, [0,1]);
   battlefield.terrain.hillHeight = 0;
   battlefield.terrain.leftY = battlefield.groundY;
   battlefield.terrain.rightY = battlefield.groundY;

@@ -206,8 +206,12 @@ canvas {
 }
 
 #skipWaitingButton {
-  display: block;
   margin: 0 auto;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
 }
 
 label {

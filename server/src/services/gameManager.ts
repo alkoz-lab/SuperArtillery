@@ -470,6 +470,7 @@ export class GameManager {
       return;
     }
 
+    // TODO: Close connection of dropped slots before removing them.
     game.lobbySlots = game.lobbySlots.filter(slot => slot.status === 'ready');
 
     console.log(

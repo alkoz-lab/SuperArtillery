@@ -41,17 +41,28 @@ export function getTerrainY(battlefield: Battlefield, x: number): number {
 
 export function createBattlefield(
   seed: number = Math.floor(Math.random() * 0x100000000),
-  playerCount: number = 2
+  playerIds: number[]
 ): Battlefield {
-  const count = Math.max(2, Math.min(9, Math.floor(playerCount)));
+
+  const count = Math.max(2, Math.min(9, playerIds.length));
   const width = count === 2 ? 420 : 260 + count * 160;
   const height = 240 + (count - 2) * 20;
+
   const random = createRandom(seed);
   const terrainVariationRoll = random();
+
   const hillHeight = terrainVariationRoll < 1 / 2
     ? randomBetween(random, 15, 65)
     : randomBetween(random, -65, -15);
+
   const extraHillCount = Math.max(0, count - 3);
+
+  const castles = playerIds.map((playerId, index) => ({
+    playerId, // ← keep original ID
+    left_x: 15 + index * ((width - 30 - 10) / (count - 1)),
+    base_y: 0
+  }));
+
   const battlefield: Battlefield = {
     width,
     height,
@@ -60,11 +71,7 @@ export function createBattlefield(
     groundY: height - 20,
     castleW: 10,
     castleH: 10,
-    castles: Array.from({ length: count }, (_, playerId) => ({
-      playerId,
-      left_x: 15 + playerId * ((width - 30 - 10) / (count - 1)),
-      base_y: 0
-    })),
+    castles,
     terrain: {
       version: TERRAIN_VERSION,
       seed: seed >>> 0,
@@ -98,3 +105,4 @@ export function createBattlefield(
 
   return battlefield;
 }
+

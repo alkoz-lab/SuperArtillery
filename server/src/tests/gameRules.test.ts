@@ -5,7 +5,7 @@ import { GameRules } from '../services/gameRules';
 import { createBattlefield } from '../utils/battlefield';
 
 function createFlatBattlefield() {
-  const battlefield = createBattlefield(1);
+  const battlefield = createBattlefield(1, [0,1]);
   battlefield.terrain.hillHeight = 0;
   battlefield.terrain.leftY = battlefield.groundY;
   battlefield.terrain.rightY = battlefield.groundY;
