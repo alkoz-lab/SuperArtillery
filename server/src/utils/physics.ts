@@ -26,40 +26,40 @@ function checkCastleCollision(
   const right = castleX + castleWidth / 2 - horizontalMargin;
   const top = groundY - castleHeight + verticalMargin;
   const bottom = groundY - verticalMargin;
-  
+
   // Find all intersection times with each edge
   const intersections: number[] = [];
-  
+
   // 1. LEFT EDGE (x = left)
   // Solve: x0 + vx*t = left
   // t = (left - x0) / vx
   if (vx !== 0) {
-      const times = solveQuadratic(0.5 * wind, vx, x0 - left);
-      for (const t of times) {
+    const times = solveQuadratic(0.5 * wind, vx, x0 - left);
+    for (const t of times) {
       if (t >= 0) {
-      const y = y0 + vy * t + 0.5 * gravity * t * t;
-      if (y >= top && y <= bottom) {
-        intersections.push(t);
+        const y = y0 + vy * t + 0.5 * gravity * t * t;
+        if (y >= top && y <= bottom) {
+          intersections.push(t);
+        }
       }
     }
-      }
   }
-  
+
   // 2. RIGHT EDGE (x = right)
   // Solve: x0 + vx*t = right
   // t = (right - x0) / vx
   if (vx !== 0) {
     const times = solveQuadratic(0.5 * wind, vx, x0 - right);
     for (const t of times) {
-    if (t >= 0) {
-      const y = y0 + vy * t + 0.5 * gravity * t * t;
-      if (y >= top && y <= bottom) {
-        intersections.push(t);
+      if (t >= 0) {
+        const y = y0 + vy * t + 0.5 * gravity * t * t;
+        if (y >= top && y <= bottom) {
+          intersections.push(t);
+        }
       }
     }
-    }
   }
-  
+
   // 3. TOP EDGE (y = top)
   // Solve: y0 + vy*t + 0.5*g*t² = top
   // 0.5*g*t² + vy*t + (y0 - top) = 0
@@ -76,7 +76,7 @@ function checkCastleCollision(
       }
     }
   }
-  
+
   // 4. BOTTOM EDGE (y = bottom)
   // Solve: y0 + vy*t + 0.5*g*t² = bottom
   const a_bot = 0.5 * gravity;
@@ -91,12 +91,12 @@ function checkCastleCollision(
       }
     }
   }
-  
+
   // Return earliest collision time (if any)
   if (intersections.length > 0) {
     return Math.min(...intersections);
   }
-  
+
   return null;
 }
 
@@ -110,17 +110,17 @@ function solveQuadratic(a: number, b: number, c: number): number[] {
     if (Math.abs(b) < 1e-10) return [];
     return [-c / b];
   }
-  
+
   const discriminant = b * b - 4 * a * c;
-  
+
   if (discriminant < 0) {
     return []; // No real solutions
   }
-  
+
   if (discriminant === 0) {
     return [-b / (2 * a)]; // One solution
   }
-  
+
   // Two solutions
   const sqrt_d = Math.sqrt(discriminant);
   return [
