@@ -3,11 +3,11 @@ import { createBattlefield, getTerrainY } from '../utils/battlefield';
 
 describe('battlefield generation', () => {
   it('reproduces the same battlefield for the same seed', () => {
-    expect(createBattlefield(12345)).toEqual(createBattlefield(12345));
+    expect(createBattlefield(12345, [1,2,3])).toEqual(createBattlefield(12345, [1,2,3]));
   });
 
   it('places castles on opposite sides and on the terrain surface', () => {
-    const battlefield = createBattlefield(12345);
+    const battlefield = createBattlefield(12345, [1,2,3]);
 
     expect(battlefield.castles[0].left_x).toBeGreaterThanOrEqual(15);
     expect(battlefield.castles[0].left_x).toBeLessThanOrEqual(80);
@@ -16,13 +16,13 @@ describe('battlefield generation', () => {
 
     for (const castle of battlefield.castles) {
       expect(castle.base_y).toBe(
-        getTerrainY(battlefield, castle.left_x + battlefield.castleWidth / 2)
+        getTerrainY(battlefield, castle.left_x + battlefield.castleW / 2)
       );
     }
   });
 
   it('generates bounded terrain between the castles', () => {
-    const battlefield = createBattlefield(12345);
+    const battlefield = createBattlefield(12345, [1,2,3]);
     const terrainY = getTerrainY(battlefield, battlefield.terrain.hillCenter);
 
     expect(terrainY).toBeLessThanOrEqual(battlefield.terrain.maxY);
@@ -30,8 +30,8 @@ describe('battlefield generation', () => {
   });
 
   it('generates deterministic wind within the supported range', () => {
-    const first = createBattlefield(12345);
-    const second = createBattlefield(12345);
+    const first = createBattlefield(12345, [1,2,3]);
+    const second = createBattlefield(12345, [1,2,3]);
 
     expect(first.wind).toBe(second.wind);
     expect(first.wind).toBeGreaterThanOrEqual(-50);
@@ -39,8 +39,8 @@ describe('battlefield generation', () => {
   });
 
   it('generates independent side elevations and bounded middle terrain', () => {
-    const first = createBattlefield(12345);
-    const second = createBattlefield(54321);
+    const first = createBattlefield(12345, [1,2,3]);
+    const second = createBattlefield(54321, [1,2,3]);
     const leftEdge = first.terrain.hillCenter - first.terrain.hillWidth;
     const rightEdge = first.terrain.hillCenter + first.terrain.hillWidth;
 
@@ -49,21 +49,21 @@ describe('battlefield generation', () => {
     expect(getTerrainY(first, 0)).toBe(first.terrain.leftY);
     expect(getTerrainY(first, leftEdge)).toBe(first.terrain.leftY);
     expect(getTerrainY(first, rightEdge)).toBe(first.terrain.rightY);
-    expect(getTerrainY(first, first.canvasWidth)).toBe(first.terrain.rightY);
+    expect(getTerrainY(first, first.width)).toBe(first.terrain.rightY);
     expect(first.terrain.hillHeight).toBeGreaterThanOrEqual(-65);
     expect(first.terrain.hillHeight).toBeLessThanOrEqual(65);
-    expect(getTerrainY(first, first.canvasWidth)).toBeGreaterThanOrEqual(first.terrain.minY);
-    expect(getTerrainY(first, first.canvasWidth)).toBeLessThanOrEqual(first.terrain.maxY);
+    expect(getTerrainY(first, first.width)).toBeGreaterThanOrEqual(first.terrain.minY);
+    expect(getTerrainY(first, first.width)).toBeLessThanOrEqual(first.terrain.maxY);
   });
 
   it('can generate both a crest and a depression from different seeds', () => {
     const samples = Array.from(
       { length: 300 },
-      (_, index) => createBattlefield((index * 1_000_003 + 1) >>> 0)
+      (_, index) => createBattlefield((index * 1_000_003 + 1) >>> 0, [1,2,3])
     );
 
     expect(samples.some(({ terrain }) => terrain.hillHeight > 0)).toBe(true);
     expect(samples.some(({ terrain }) => terrain.hillHeight < 0)).toBe(true);
-    expect(samples.some(({ terrain }) => terrain.hillHeight === 0)).toBe(true);
+    expect(samples.every(({ terrain }) => terrain.hillHeight !== 0)).toBe(true);
   });
 });

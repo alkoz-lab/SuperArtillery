@@ -10,7 +10,7 @@ describe('InvitationService', () => {
 
     expect('error' in result).toBe(false);
     if (!('error' in result)) {
-      expect(result.inviteUrl).toMatch(/^https:\/\/example\.com\/SuperArtillery\/\?invite=/);
+      expect(result.inviteUrl).toMatch(/^https:\/\/example\.com\/SuperArtillery\/\?server=http%3A%2F%2Flocalhost%3A3000&invite=/);
       expect(result.playerToken).toBeTruthy();
       expect(result.inviteCode).toHaveLength(4);
     }
@@ -25,6 +25,9 @@ describe('InvitationService', () => {
 
     const accepted = service.acceptInvitation(created.inviteCode.toLowerCase(), 'Bob');
     expect('error' in accepted).toBe(false);
+    if (!('error' in accepted)) {
+      expect(accepted.playerId).toBe(1);
+    }
 
     const reused = service.acceptInvitation(created.inviteCode, 'Carol');
     expect(reused).toEqual({
