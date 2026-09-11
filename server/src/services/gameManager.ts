@@ -587,7 +587,7 @@ export class GameManager {
         players: this.getPlayerStates(game)
       });
     }
-
+  
     return {
       success: true,
       answer,
@@ -715,7 +715,7 @@ export class GameManager {
   }
 
   /**
-   * Broadcast a message to both players in a game
+   * Broadcast a message to all players in a game
    */
   private broadcastToGame(game: PrivateGame, message: GameMessage): void {
     const messageStr = JSON.stringify(message);

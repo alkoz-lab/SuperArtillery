@@ -17,7 +17,7 @@ function checkCastleCollision(
   castleX: number, castleWidth: number, castleHeight: number,
   groundY: number
 ): number | null {
-  const CASTLE_HIT_ZONE_RATIO = 0.9;
+  const CASTLE_HIT_ZONE_RATIO = 0.95;
   const horizontalMargin = (castleWidth * (1 - CASTLE_HIT_ZONE_RATIO)) / 2;
   const verticalMargin = (castleHeight * (1 - CASTLE_HIT_ZONE_RATIO)) / 2;
 
