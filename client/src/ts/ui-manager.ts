@@ -655,7 +655,7 @@ export class UIManager {
       const shot = history[index];
       const angleCell = document.createElement('td');
       const velocityCell = document.createElement('td');
-      const angleText = shot ? `${shot.angle}°` : '—';
+      const angleText = shot ? `${shot.direction == 'Left' ? '↖️':''}${shot.angle}°${shot.direction == 'Right' ? '↗️':''}` : '—';
       const velocityText = shot ? String(shot.velocity) : '—';
 
       angleCell.textContent = angleText;
@@ -789,7 +789,12 @@ export class UIManager {
 
   public prepareForNewRound(): void {
     this.setGameOverControlsVisible(false);
-    if (this.rematchControls) this.rematchControls.hidden = true;
+    if (this.rematchControls) {
+      this.rematchControls.hidden = true;
+    }
+    if (this.rematchPlayers) {
+      this.rematchPlayers.replaceChildren();
+    }
     if (this.rematchButton) {
       this.rematchButton.style.display = 'none';
       this.rematchButton.disabled = true;

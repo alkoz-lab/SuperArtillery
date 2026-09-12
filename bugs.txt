@@ -2,8 +2,7 @@
  even though it has no effect for them.
 2. "Direction:" values "Left"/"Right" are not clear enought for the players. 
 Change them to "Shoot↖️" and "Shoot↗️"? Display direction in Fire button?
-Another one which chosen [Play again] remains, doesn't take turn. Suggesting that server sends turn message to wrong player.
-3. Feature: count frags for each player and display it in the UI. E.g. "Alex +1". Frags kept on client side. 
+3. Feature: count frags for each player and display it in the UI. E.g. "Alex +1". 
 Keep accumulated with each rematch.
 4. The creator when drops, no one can shoot
 5. When players drops (responding I had enough on rematch), close its Web Socket connection.

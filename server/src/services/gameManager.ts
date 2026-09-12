@@ -327,6 +327,10 @@ export class GameManager {
     if (game.hotSeat && playerId < 2) {
       game.initiator.websocket = ws;
       game.invited.websocket = ws;
+      game.lobbySlots.forEach(s => {
+        s.status = 'ready';
+        s.session.websocket = ws;
+      });
     }
 
     console.log(`✅ Player ${playerId} (${slot.session.name ?? `Player ${playerId + 1}`}) connected to game ${gameId}`);
@@ -715,7 +719,7 @@ export class GameManager {
   }
 
   /**
-   * Broadcast a message to both players in a game
+   * Broadcast a message to all players in a game
    */
   private broadcastToGame(game: PrivateGame, message: GameMessage): void {
     const messageStr = JSON.stringify(message);
