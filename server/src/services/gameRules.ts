@@ -201,7 +201,7 @@ export class GameRules {
       // A shot pierces every castle in its path, so all of them are eliminated together.
       const targetPlayerIds = hits.map(hit => hit.playerId);
       targetPlayerIds.forEach(targetId => {
-        const target = slots[targetId];
+        const target = slots.find(slot => slot.playerId === targetId);
         if (target) {
           target.active = false;
           target.eliminated = true;
