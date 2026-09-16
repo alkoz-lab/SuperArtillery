@@ -91,19 +91,19 @@ export class Renderer {
     this.ctx.restore();
   }
 
-  private randomizeCastleGlyphs(): void {
+  private randomizeCastleGlyphs(playerIds: number[]): void {
     const pool = [...CASTLE_EMOJIS];
-    const leftIndex = Math.floor(Math.random() * pool.length);
-    let rightIndex = Math.floor(Math.random() * pool.length);
+    const glyphs: Record<number, string> = {};
 
-    while (rightIndex === leftIndex) {
-      rightIndex = Math.floor(Math.random() * pool.length);
+    for (let index = pool.length - 1; index > 0; index--) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [pool[index], pool[swapIndex]] = [pool[swapIndex], pool[index]];
     }
 
-    this.castleGlyphs = {
-      0: pool[leftIndex],
-      1: pool[rightIndex]
-    };
+    playerIds.forEach((playerId, index) => {
+      glyphs[playerId] = pool[index];
+    });
+    this.castleGlyphs = glyphs;
   }
 
   public drawCastle(playerId: number, leftX: number, isActive: boolean = false): void {
@@ -141,7 +141,7 @@ export class Renderer {
     this.castleHeight = battlefield.castleH;
     this.defeatedCastlePlayerIds.clear();
     this.ripCastlePlayerIds.clear();
-    this.randomizeCastleGlyphs();
+    this.randomizeCastleGlyphs(battlefield.castles.map((castle) => castle.playerId));
 
     battlefield.castles.forEach((castle) => {
       this.castleLeftByPlayerId[castle.playerId] = castle.left_x;

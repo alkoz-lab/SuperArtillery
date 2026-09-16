@@ -199,4 +199,23 @@ describe('Renderer trajectory styles', () => {
 
     randomSpy.mockRestore();
   });
+
+  it('assigns a unique emoji to every local player', () => {
+    const canvas = document.createElement('canvas');
+    const renderer = new Renderer(canvas);
+    const localBattlefield = {
+      ...battlefield,
+      castles: Array.from({ length: 5 }, (_, playerId) => ({
+        playerId,
+        left_x: 20 + playerId * 80,
+        base_y: 140
+      }))
+    };
+
+    renderer.applyBattlefield(localBattlefield);
+
+    const glyphs = Object.values(renderer['castleGlyphs']);
+    expect(glyphs).toHaveLength(5);
+    expect(new Set(glyphs).size).toBe(5);
+  });
 });
