@@ -5,6 +5,7 @@ import { join } from 'path';
 import { GameManager } from '../services/gameManager';
 import type { HealthResponse, StatsResponse, ErrorResponse } from '../types/private-game';
 import { HTTP_STATUS } from '../httpStatus';
+import { errorCodeToHttpStatus } from '../http/errorMapper';
 import { CONTRACT_VERSION } from '@superartillery/core';
 
 // Derive a full base URL for the client that preserves any pathname when possible.
@@ -126,12 +127,11 @@ export function createApiRouter(game: GameManager, getWebSocketCount: () => numb
     const result = game.createGame(name, clientOrigin, serverOrigin, playerCount ?? 2);
 
     if ('error' in result) {
-      const statusCode = result.code === GameManager.ERROR_CODES.MAX_GAMES_REACHED ? HTTP_STATUS.SERVICE_UNAVAILABLE : HTTP_STATUS.BAD_REQUEST;
       const errorResponse: ErrorResponse = {
         code: result.code,
         message: result.error
       };
-      return res.status(statusCode).json(errorResponse);
+      return res.status(errorCodeToHttpStatus(result.code)).json(errorResponse);
     }
 
     return res.status(HTTP_STATUS.CREATED).json(result);
@@ -149,12 +149,7 @@ export function createApiRouter(game: GameManager, getWebSocketCount: () => numb
 
     const result = game.skipWaiting(gameId, sessionToken);
     if ('error' in result) {
-      const statusCode = result.code === GameManager.ERROR_CODES.GAME_NOT_FOUND
-        ? HTTP_STATUS.NOT_FOUND
-        : result.code === GameManager.ERROR_CODES.INVALID_SESSION_TOKEN || result.code === GameManager.ERROR_CODES.NOT_CREATOR
-          ? HTTP_STATUS.UNAUTHORIZED
-          : HTTP_STATUS.BAD_REQUEST;
-      return res.status(statusCode).json({ code: result.code, message: result.error });
+      return res.status(errorCodeToHttpStatus(result.code)).json({ code: result.code, message: result.error });
     }
     return res.status(HTTP_STATUS.OK).json(result);
   });
@@ -163,10 +158,7 @@ export function createApiRouter(game: GameManager, getWebSocketCount: () => numb
     const { names } = req.body;
     const result = game.createHotSeatGame(names);
     if ('error' in result) {
-      const statusCode = result.code === GameManager.ERROR_CODES.MAX_GAMES_REACHED
-        ? HTTP_STATUS.SERVICE_UNAVAILABLE
-        : HTTP_STATUS.BAD_REQUEST;
-      return res.status(statusCode).json({ code: result.code, message: result.error });
+      return res.status(errorCodeToHttpStatus(result.code)).json({ code: result.code, message: result.error });
     }
     return res.status(HTTP_STATUS.CREATED).json(result);
   });
@@ -177,12 +169,11 @@ export function createApiRouter(game: GameManager, getWebSocketCount: () => numb
     const result = game.acceptInvitation(inviteCode, name);
 
     if ('error' in result) {
-      const statusCode = result.code === GameManager.ERROR_CODES.INVITATION_EXPIRED ? HTTP_STATUS.GONE : HTTP_STATUS.BAD_REQUEST;
       const errorResponse: ErrorResponse = {
         code: result.code,
         message: result.error
       };
-      return res.status(statusCode).json(errorResponse);
+      return res.status(errorCodeToHttpStatus(result.code)).json(errorResponse);
     }
 
     return res.status(HTTP_STATUS.OK).json(result);
@@ -204,12 +195,11 @@ export function createApiRouter(game: GameManager, getWebSocketCount: () => numb
     const result = game.getGameStatus(gameId, sessionToken);
 
     if ('error' in result) {
-      const statusCode = result.code === GameManager.ERROR_CODES.GAME_NOT_FOUND ? HTTP_STATUS.NOT_FOUND : HTTP_STATUS.UNAUTHORIZED;
       const errorResponse: ErrorResponse = {
         code: result.code,
         message: result.error
       };
-      return res.status(statusCode).json(errorResponse);
+      return res.status(errorCodeToHttpStatus(result.code, HTTP_STATUS.UNAUTHORIZED)).json(errorResponse);
     }
 
     return res.status(HTTP_STATUS.OK).json(result);

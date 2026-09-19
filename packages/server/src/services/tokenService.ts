@@ -1,10 +1,10 @@
-import { randomBytes, randomUUID, createHash } from 'crypto';
+import { encodeBase64, randomBytes, randomUuid, sha256Hex } from '@superartillery/core';
 
 /**
  * TokenService: Cryptographically secure token generation and hashing
  * 
  * Security notes:
- * - All tokens generated with crypto.randomBytes
+ * - All tokens generated from platform CSPRNG randomness
  * - Tokens are hashed before storage in memory
  * - Token values are never logged or exposed to clients in error messages
  * - Short codes (4 chars) use alphanumeric subset for user typing
@@ -17,7 +17,7 @@ export class TokenService {
    * @returns Cryptographically random UUID string
    */
   static generateGameId(): string {
-    return randomUUID();
+    return randomUuid();
   }
 
   /**
@@ -26,7 +26,7 @@ export class TokenService {
    * @returns Base64-encoded random bytes (32 bytes = 256 bits)
    */
   static generateSessionToken(): string {
-    return randomBytes(32).toString('base64');
+    return encodeBase64(randomBytes(32));
   }
 
   /**
@@ -54,7 +54,7 @@ export class TokenService {
    * @returns Hex-encoded hash
    */
   static hashToken(token: string): string {
-    return createHash('sha256').update(token).digest('hex');
+    return sha256Hex(token);
   }
 
   /**

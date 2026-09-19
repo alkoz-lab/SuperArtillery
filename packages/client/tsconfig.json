@@ -27,5 +27,6 @@
       "@superartillery/core": ["../core/src/index.ts"]
     }
   },
-  "include": ["src/**/*", "../core/src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["../core/src/**/*.test.ts"]
 }

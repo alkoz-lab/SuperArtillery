@@ -16,8 +16,8 @@ function createGame(overrides: Partial<PrivateGame> = {}): PrivateGame {
       expiresAt: 100,
       accepted: false
     },
-    initiator: { name: 'Alice', sessionTokenHash: 'alice-hash', websocket: null },
-    invited: { name: 'Bob', sessionTokenHash: 'bob-hash', websocket: null },
+    initiator: { name: 'Alice', sessionTokenHash: 'alice-hash', connection: null },
+    invited: { name: 'Bob', sessionTokenHash: 'bob-hash', connection: null },
     currentTurn: 0,
     gameStarted: false,
     round: 1,
@@ -36,8 +36,8 @@ describe('GameCleanupService', () => {
     const initiatorSocket = { close: vi.fn() } as any;
     const invitedSocket = { close: vi.fn() } as any;
     repository.set(createGame({
-      initiator: { name: 'Alice', sessionTokenHash: 'alice-hash', websocket: initiatorSocket },
-      invited: { name: 'Bob', sessionTokenHash: 'bob-hash', websocket: invitedSocket }
+      initiator: { name: 'Alice', sessionTokenHash: 'alice-hash', connection: initiatorSocket },
+      invited: { name: 'Bob', sessionTokenHash: 'bob-hash', connection: invitedSocket }
     }));
 
     new GameCleanupService(repository, createClock(101)).cleanup();

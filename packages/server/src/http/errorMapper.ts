@@ -1,0 +1,17 @@
+import { GAME_ERROR_CODES } from '../services/gameErrors';
+import { HTTP_STATUS } from '../httpStatus';
+
+const STATUS_BY_ERROR_CODE: Readonly<Record<string, number>> = {
+  [GAME_ERROR_CODES.MAX_GAMES_REACHED]: HTTP_STATUS.SERVICE_UNAVAILABLE,
+  [GAME_ERROR_CODES.GAME_NOT_FOUND]: HTTP_STATUS.NOT_FOUND,
+  [GAME_ERROR_CODES.GAME_UNAVAILABLE]: HTTP_STATUS.NOT_FOUND,
+  [GAME_ERROR_CODES.INVITATION_EXPIRED]: HTTP_STATUS.GONE,
+  [GAME_ERROR_CODES.INVALID_SESSION_TOKEN]: HTTP_STATUS.UNAUTHORIZED,
+  [GAME_ERROR_CODES.MISSING_SESSION_TOKEN]: HTTP_STATUS.UNAUTHORIZED,
+  [GAME_ERROR_CODES.NOT_CREATOR]: HTTP_STATUS.UNAUTHORIZED
+};
+
+/** Single place that decides the HTTP status for a domain error code. */
+export function errorCodeToHttpStatus(code: string, fallback: number = HTTP_STATUS.BAD_REQUEST): number {
+  return STATUS_BY_ERROR_CODE[code] ?? fallback;
+}

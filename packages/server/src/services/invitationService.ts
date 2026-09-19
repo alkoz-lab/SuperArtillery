@@ -53,12 +53,12 @@ export class InvitationService {
       initiator: {
         name: normalizedName,
         sessionTokenHash: TokenService.hashToken(sessionToken),
-        websocket: null
+        connection: null
       },
       invited: {
         name: null,
         sessionTokenHash: '',
-        websocket: null
+        connection: null
       },
       currentTurn: 0,
       gameStarted: false,
@@ -73,7 +73,7 @@ export class InvitationService {
         session: index === 0 ? game.invited : {
           name: null,
           sessionTokenHash: '',
-          websocket: null
+          connection: null
         },
         status: 'waiting' as const,
         active: true,

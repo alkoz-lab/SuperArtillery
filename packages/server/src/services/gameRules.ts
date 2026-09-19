@@ -1,4 +1,3 @@
-import { WebSocket } from 'ws';
 import type { Battlefield } from '../types/messages';
 import type { GameStatus, PrivateGame } from '../types/private-game';
 import { createBattlefield } from '../utils/battlefield';
@@ -18,8 +17,7 @@ export class GameRules {
     if (
       game.gameStarted ||
       slots.length < 2 ||
-      slots.some(slot => slot.status !== 'skipped' &&
-        (slot.session.websocket === null || slot.session.websocket.readyState !== WebSocket.OPEN))
+      slots.some(slot => slot.status !== 'skipped' && !slot.session.connection?.isOpen())
     ) {
       return null;
     }
@@ -44,7 +42,7 @@ export class GameRules {
   ): { statusChanged: boolean; status: GameStatus } {
     const slot = this.ensureLobbySlots(game)[playerId];
     if (slot) {
-      slot.session.websocket = null;
+      slot.session.connection = null;
       game.rematchReady[playerId] = false;
     }
 

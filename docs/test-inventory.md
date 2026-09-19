@@ -40,12 +40,18 @@ Legend for the status column: `[ ]` unclassified · `[x]` covered · `[-]` inten
 
 ## server/src/tests/gameCleanupService.test.ts — `GameCleanupService`
 
+> Kept: fixtures mechanically renamed `websocket` → `connection` in Phase 2.
+
 - [ ] removes an expired pending game and closes its sockets
 - [ ] marks an inactive active game expired without deleting it before its expiry
 - [ ] removes a finished game after its grace period
 - [ ] does not remove a game at the exact expiration boundary
 
 ## server/src/tests/gameManager.integration.test.ts — `Integration: Private Games Flow`
+
+> **Deleted in Phase 2** (socket mocks incompatible with the `PlayerConnection` port).
+> Replacement: the `GameEngine` suite in `packages/core` (Phase 3). Lines below stay unclassified
+> until that suite exists.
 
 ### Full game lifecycle
 - [ ] Player A creates a game, Player B accepts, both connect
@@ -72,6 +78,10 @@ Legend for the status column: `[ ]` unclassified · `[x]` covered · `[-]` inten
 - [ ] Server reports when at max capacity
 
 ## server/src/tests/gameManager.test.ts — `GameManager`
+
+> **Deleted in Phase 2** (socket mocks incompatible with the `PlayerConnection` port).
+> Replacement: the `GameEngine` suite in `packages/core` (Phase 3). Lines below stay unclassified
+> until that suite exists.
 
 ### createGame
 - [ ] creates a game with two empty player slots
@@ -128,7 +138,8 @@ Legend for the status column: `[ ]` unclassified · `[x]` covered · `[-]` inten
 
 ## server/src/tests/gameRules.test.ts — `GameRules`
 
-> Moved to `packages/core` (import paths + `websocket`→`connection` rename only).
+> Kept: fixtures mechanically renamed `websocket` → `connection` in Phase 2.
+> Moves to `packages/core` in Phase 3 (import paths only).
 
 - [ ] starts a game when both players have open sockets
 - [ ] transitions a pending game to expired when the initiator disconnects

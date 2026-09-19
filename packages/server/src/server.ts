@@ -9,6 +9,7 @@ import path from 'path';
 import { parse as parseYaml } from 'yaml';
 import { GameManager } from './services/gameManager';
 import { createApiRouter } from './routes/api';
+import { WebSocketPlayerConnection } from './transport/webSocketPlayerConnection';
 import { CONTRACT_VERSION } from '@superartillery/core';
 
 // Load environment variables
@@ -17,7 +18,11 @@ dotenv.config();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Game manager instance (supports multiple concurrent games)
-const game = new GameManager();
+const game = new GameManager(undefined, undefined, {
+  // Used only when a request carries no Origin/Referer header (e.g. direct API calls).
+  defaultClientOrigin: process.env.CLIENT_URL,
+  defaultServerOrigin: process.env.SERVER_URL
+});
 
 // Create Express app for HTTP endpoints
 const app = express();
@@ -44,7 +49,7 @@ const wss = new WebSocketServer({ server: httpServer });
 app.use('/api', createApiRouter(game, () => Array.from(wss.clients).filter(client => client.readyState === WebSocket.OPEN).length));
 
 // Map to track connection metadata: gameId and playerId for each WebSocket
-const connectionMetadata = new WeakMap<WebSocket, { gameId: string; playerId: number }>();
+const connectionMetadata = new WeakMap<WebSocket, { gameId: string; playerId: number; connection: WebSocketPlayerConnection }>();
 
 function logWebSocketMessage(direction: 'sent' | 'received', message: unknown, playerName: string, gameId?: string): void {
   const payload = typeof message === 'string' ? message : JSON.stringify(message);
@@ -98,7 +103,8 @@ wss.on('connection', (ws: WebSocket, req) => {
   }
 
   // Authenticate and connect player via session token
-  const result = game.connectPlayer(gameId, sessionToken, ws);
+  const connection = new WebSocketPlayerConnection(ws);
+  const result = game.connectPlayer(gameId, sessionToken, connection);
 
   if ('error' in result) {
     console.log(`❌ Connection rejected: ${result.error}`);
@@ -117,7 +123,7 @@ wss.on('connection', (ws: WebSocket, req) => {
   const playerName = game.getPlayerName(gameId, playerId) ?? `Player ${playerId + 1}`;
   
   // Store connection metadata
-  connectionMetadata.set(ws, { gameId, playerId });
+  connectionMetadata.set(ws, { gameId, playerId, connection });
 
   console.log(`✅ Player ${playerId} (${playerName}) connected to game ${gameId}`);
 
@@ -131,7 +137,7 @@ wss.on('connection', (ws: WebSocket, req) => {
       console.log(
         `❌ Player ${metadata.playerId} (${game.getPlayerName(metadata.gameId, metadata.playerId) ?? `Player ${metadata.playerId + 1}`}) disconnected from game ${metadata.gameId}`
       );
-      game.disconnectPlayer(metadata.gameId, metadata.playerId, ws);
+      game.disconnectPlayer(metadata.gameId, metadata.playerId, metadata.connection);
     }
   });
 

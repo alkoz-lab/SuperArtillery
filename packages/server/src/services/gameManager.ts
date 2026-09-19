@@ -1,4 +1,4 @@
-import { WebSocket } from 'ws';
+import type { PlayerConnection, TimerHandle } from '@superartillery/core';
 import type {
   GameStartMessage,
   TurnChangeMessage,
@@ -22,17 +22,20 @@ import {
   GameCleanupService,
   SystemTimerScheduler,
   type TimerScheduler
-} from './gameCleanupService';
-import { GAME_CONFIG } from './gameConfig';
+} from './gameCleanupService';import { GAME_CONFIG } from './gameConfig';
 import { GAME_ERROR_CODES, GAME_ERROR_MESSAGES } from './gameErrors';
 import { InvitationService } from './invitationService';
 import { GameRules } from './gameRules';
 import { HTTP_STATUS } from '../httpStatus';
 import { getDefaultShotDirection } from '../utils/shotResolver';
 
-// Fallback used only when a request has no Origin/Referer header (e.g. direct API calls/tests)
-const DEFAULT_CLIENT_ORIGIN = process.env.CLIENT_URL || 'http://localhost:5173';
-const DEFAULT_SERVER_ORIGIN = process.env.SERVER_URL || 'http://localhost:3000';
+export interface GameManagerOptions {
+  defaultClientOrigin?: string;
+  defaultServerOrigin?: string;
+}
+
+const FALLBACK_CLIENT_ORIGIN = 'http://localhost:5173';
+const FALLBACK_SERVER_ORIGIN = 'http://localhost:3000';
 
 
 /**
@@ -56,7 +59,9 @@ export class GameManager {
   private readonly cleanupService: GameCleanupService;
   private readonly gameRules: GameRules;
   private readonly timerScheduler: TimerScheduler;
-  private cleanupInterval: NodeJS.Timeout | null = null;
+  private readonly defaultClientOrigin: string;
+  private readonly defaultServerOrigin: string;
+  private cleanupInterval: TimerHandle | null = null;
   private internetGamesEverStarted: number = 0;
   private internetRematches: number = 0;
   private deviceGamesEverStarted: number = 0;
@@ -65,11 +70,14 @@ export class GameManager {
   // Configuration
   constructor(
     games: GameRepository = new InMemoryGameRepository(),
-    timerScheduler: TimerScheduler = new SystemTimerScheduler()
+    timerScheduler: TimerScheduler = new SystemTimerScheduler(),
+    options: GameManagerOptions = {}
   ) {
     this.games = games;
     this.timerScheduler = timerScheduler;
-    this.invitationService = new InvitationService(games, DEFAULT_CLIENT_ORIGIN);
+    this.defaultClientOrigin = options.defaultClientOrigin ?? FALLBACK_CLIENT_ORIGIN;
+    this.defaultServerOrigin = options.defaultServerOrigin ?? FALLBACK_SERVER_ORIGIN;
+    this.invitationService = new InvitationService(games, this.defaultClientOrigin);
     this.cleanupService = new GameCleanupService(games);
     this.gameRules = new GameRules();
     this.startCleanupTimer();
@@ -99,7 +107,7 @@ export class GameManager {
    * @param playerName The initiator's display name
   * @returns Game creation response with an invite code
    */
-  public createGame(playerName: string, clientOrigin: string = DEFAULT_CLIENT_ORIGIN, serverOrigin: string = DEFAULT_SERVER_ORIGIN, playerCount: number = 2): CreateGameResponse | { error: string; code: string } {
+  public createGame(playerName: string, clientOrigin?: string, serverOrigin?: string, playerCount: number = 2): CreateGameResponse | { error: string; code: string } {
     const normalizedName = TokenService.normalizeName(playerName);
     if (!normalizedName) {
       return {
@@ -118,7 +126,13 @@ export class GameManager {
 
     this.internetGamesEverStarted++;
 
-    return this.invitationService.createGame(playerName, clientOrigin, serverOrigin, Date.now(), playerCount);
+    return this.invitationService.createGame(
+      playerName,
+      clientOrigin ?? this.defaultClientOrigin,
+      serverOrigin ?? this.defaultServerOrigin,
+      Date.now(),
+      playerCount
+    );
   }
 
   /**
@@ -180,8 +194,8 @@ export class GameManager {
         accepted: true
       },
       // initiator/invited kept as aliases to slots 0/1 for code that still reads those fields directly
-      initiator: { name: names[0]!, sessionTokenHash: TokenService.hashToken(tokens[0]), websocket: null },
-      invited: { name: names[1]!, sessionTokenHash: TokenService.hashToken(tokens[1]), websocket: null },
+      initiator: { name: names[0]!, sessionTokenHash: TokenService.hashToken(tokens[0]), connection: null },
+      invited: { name: names[1]!, sessionTokenHash: TokenService.hashToken(tokens[1]), connection: null },
       currentTurn: 0,
       gameStarted: false,
       round: 1,
@@ -192,7 +206,7 @@ export class GameManager {
       session: playerId === 0 ? game.initiator : playerId === 1 ? game.invited : {
         name: name!,
         sessionTokenHash: TokenService.hashToken(tokens[playerId]),
-        websocket: null
+        connection: null
       },
       status: 'waiting',
       active: true,
@@ -248,8 +262,8 @@ export class GameManager {
 
   private getPlayersConnected(game: PrivateGame): number {
     return game.hotSeat
-      ? (game.initiator.websocket?.readyState === WebSocket.OPEN ? game.playerCount : 0)
-      : game.lobbySlots.filter(slot => slot.session.websocket?.readyState === WebSocket.OPEN).length;
+      ? (game.initiator.connection?.isOpen() ? game.playerCount : 0)
+      : game.lobbySlots.filter(slot => slot.session.connection?.isOpen()).length;
   }
 
   private getLobbySlotViews(game: PrivateGame): Array<{ playerId: number; name?: string; status: LobbySlotStatus }> {
@@ -279,7 +293,7 @@ export class GameManager {
     const slot = (game.lobbySlots.length ? game.lobbySlots : [game.initiator, game.invited].map((session, index) => ({ playerId: index, session, status: 'waiting' as const, active: true, eliminated: false })))[playerId];
     if (!slot) return 'skipped';
     if (slot.status === 'skipped') return 'skipped';
-    return slot.session.websocket?.readyState === WebSocket.OPEN && slot.session.name
+    return slot.session.connection?.isOpen() && slot.session.name
       ? 'ready'
       : 'waiting';
   }
@@ -291,16 +305,16 @@ export class GameManager {
   }
 
   /**
-   * Connect a player via WebSocket using session token
+   * Connect a player using a session token
    * @param gameId The game ID
    * @param sessionToken The player's session token
-   * @param ws The WebSocket connection
+   * @param connection The player's outbound channel
    * @returns Player ID (0 or 1) if successful, error otherwise
    */
   public connectPlayer(
     gameId: string,
     sessionToken: string,
-    ws: WebSocket
+    connection: PlayerConnection
   ): { playerId: number } | { error: string; code: string } {
     const game = this.games.get(gameId);
     if (!game) {
@@ -320,23 +334,23 @@ export class GameManager {
       };
     }
 
-    // Store WebSocket connection
+    // Store the player's outbound channel
     const slot = game.lobbySlots[playerId];
     if (!slot) {
       return { error: GameManager.ERROR_MESSAGES.INVALID_SESSION_TOKEN, code: GameManager.ERROR_CODES.INVALID_SESSION_TOKEN };
     }
-    slot.session.websocket = ws;
+    slot.session.connection = connection;
     slot.status = 'ready';
-    if (playerId === 0) game.initiator.websocket = ws;
-    if (playerId === 1) game.invited.websocket = ws;
+    if (playerId === 0) game.initiator.connection = connection;
+    if (playerId === 1) game.invited.connection = connection;
 
     // A hot-seat game has a single physical client, always authenticating as player 0's token.
     if (game.hotSeat && playerId === 0) {
-      game.initiator.websocket = ws;
-      game.invited.websocket = ws;
+      game.initiator.connection = connection;
+      game.invited.connection = connection;
       game.lobbySlots.forEach(s => {
         s.status = 'ready';
-        s.session.websocket = ws;
+        s.session.connection = connection;
       });
     }
 
@@ -423,7 +437,7 @@ export class GameManager {
     }
 
     const connectedSlots = game.lobbySlots.filter(slot =>
-      slot.session.name && slot.session.websocket?.readyState === WebSocket.OPEN
+      slot.session.name && slot.session.connection?.isOpen()
     );
     if (connectedSlots.length < 2) {
       return { error: GameManager.ERROR_MESSAGES.NOT_ENOUGH_PLAYERS, code: GameManager.ERROR_CODES.NOT_ENOUGH_PLAYERS };
@@ -451,19 +465,19 @@ export class GameManager {
   /**
    * Handle player disconnect
    */
-  public disconnectPlayer(gameId: string, playerId: number, ws: WebSocket): void {
+  public disconnectPlayer(gameId: string, playerId: number, connection: PlayerConnection): void {
     const game = this.games.get(gameId);
     if (!game) return;
 
-    const currentSocket = game.lobbySlots[playerId]?.session.websocket;
-    if (currentSocket !== ws) return;
+    const currentConnection = game.lobbySlots[playerId]?.session.connection;
+    if (currentConnection !== connection) return;
 
     // One device controls every hot-seat player, so any disconnect ends the whole match.
     if (game.hotSeat) {
-      game.initiator.websocket = null;
-      game.invited.websocket = null;
+      game.initiator.connection = null;
+      game.invited.connection = null;
       game.lobbySlots.forEach(s => {
-        s.session.websocket = null;
+        s.session.connection = null;
         s.active = false;
         s.eliminated = true;
       });
@@ -474,7 +488,7 @@ export class GameManager {
       return;
     }
 
-    game.lobbySlots[playerId].session.websocket = null;
+    game.lobbySlots[playerId].session.connection = null;
     if (game.status === 'pending') game.lobbySlots[playerId].status = 'waiting';
     if (playerId < 2) this.gameRules.disconnect(game, playerId as 0 | 1);
     // Let remaining waiting players know someone left (or the lobby expired) in real time.
@@ -530,7 +544,7 @@ export class GameManager {
       playerId: slot.playerId,
       name: slot.session.name ?? `Player ${slot.playerId + 1}`,
       active: slot.active && !slot.eliminated && slot.status !== 'skipped',
-      connected: slot.session.websocket?.readyState === WebSocket.OPEN
+      connected: slot.session.connection?.isOpen() ?? false
     }));
   }
 
@@ -741,21 +755,19 @@ export class GameManager {
    * Broadcast a message to all players in a game
    */
   private broadcastToGame(game: PrivateGame, message: GameMessage): void {
-    const messageStr = JSON.stringify(message);
-
-    const sockets = new Set<WebSocket>();
+    const connections = new Set<PlayerConnection>();
     game.lobbySlots.forEach((slot) => {
-      if (slot.session.websocket && slot.session.websocket.readyState === WebSocket.OPEN) {
-        sockets.add(slot.session.websocket);
+      if (slot.session.connection?.isOpen()) {
+        connections.add(slot.session.connection);
       }
     });
-    sockets.forEach((socket) => {
+    connections.forEach((connection) => {
       const recipientNames = game.lobbySlots
-        .filter(slot => slot.session.websocket === socket)
+        .filter(slot => slot.session.connection === connection)
         .map(slot => slot.session.name ?? `Player ${slot.playerId + 1}`)
         .join(', ');
-      console.log(`📤 WebSocket message type=${message.type} game=${game.id} to=${recipientNames || 'unknown'} payload=${messageStr}`);
-      socket.send(messageStr);
+      console.log(`📤 WebSocket message type=${message.type} game=${game.id} to=${recipientNames || 'unknown'} payload=${JSON.stringify(message)}`);
+      connection.send(message);
     });
   }
 

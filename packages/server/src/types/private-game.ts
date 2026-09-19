@@ -1,4 +1,4 @@
-import { WebSocket } from 'ws';
+import type { PlayerConnection } from '@superartillery/core';
 import type { Battlefield } from './messages';
 
 /**
@@ -14,7 +14,7 @@ export type GameStatus = 'pending' | 'active' | 'finished' | 'expired';
 export interface PlayerSession {
   name: string | null;
   sessionTokenHash: string; // Hash of the player's session token
-  websocket: WebSocket | null;
+  connection: PlayerConnection | null;
 }
 
 /**

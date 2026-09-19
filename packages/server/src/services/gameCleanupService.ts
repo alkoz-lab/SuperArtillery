@@ -1,28 +1,17 @@
+import { SystemClock, type Clock, type TimerHandle, type TimerScheduler } from '@superartillery/core';
 import type { GameRepository } from './gameRepository';
 import { GAME_CONFIG } from './gameConfig';
 
-export interface Clock {
-  now(): number;
-}
-
-export interface TimerScheduler {
-  setInterval(callback: () => void, milliseconds: number): NodeJS.Timeout;
-  clearInterval(timer: NodeJS.Timeout): void;
-}
-
-export class SystemClock implements Clock {
-  public now(): number {
-    return Date.now();
-  }
-}
+export { SystemClock };
+export type { Clock, TimerHandle, TimerScheduler };
 
 export class SystemTimerScheduler implements TimerScheduler {
-  public setInterval(callback: () => void, milliseconds: number): NodeJS.Timeout {
+  public setInterval(callback: () => void, milliseconds: number): TimerHandle {
     return setInterval(callback, milliseconds);
   }
 
-  public clearInterval(timer: NodeJS.Timeout): void {
-    clearInterval(timer);
+  public clearInterval(timer: TimerHandle): void {
+    clearInterval(timer as ReturnType<typeof setInterval>);
   }
 }
 
@@ -76,8 +65,8 @@ export class GameCleanupService {
       if (!game) return;
 
       const sessions = game.lobbySlots?.map(slot => slot.session) ?? [game.initiator, game.invited];
-      const sockets = new Set(sessions.map(session => session.websocket).filter(Boolean));
-      sockets.forEach(socket => socket?.close());
+      const connections = new Set(sessions.map(session => session.connection).filter(Boolean));
+      connections.forEach(connection => connection?.close());
       this.games.delete(gameId);
     });
   }

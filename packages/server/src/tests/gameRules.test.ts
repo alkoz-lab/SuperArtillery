@@ -1,8 +1,12 @@
-import { WebSocket } from 'ws';
 import { describe, expect, it } from 'vitest';
+import type { PlayerConnection } from '@superartillery/core';
 import type { PrivateGame } from '../types/private-game';
 import { GameRules } from '../services/gameRules';
 import { createBattlefield } from '../utils/battlefield';
+
+function createOpenConnection(): PlayerConnection {
+  return { isOpen: () => true, send: () => {}, close: () => {} };
+}
 
 function createFlatBattlefield() {
   const battlefield = createBattlefield(1, [0,1]);
@@ -30,12 +34,12 @@ function createGame(): PrivateGame {
     initiator: {
       name: 'Alice',
       sessionTokenHash: 'alice-hash',
-      websocket: null
+      connection: null
     },
     invited: {
       name: 'Bob',
       sessionTokenHash: 'bob-hash',
-      websocket: null
+      connection: null
     },
     currentTurn: 0,
     gameStarted: false,
@@ -47,9 +51,9 @@ function createGame(): PrivateGame {
 describe('GameRules', () => {
   it('starts a game when both players have open sockets', () => {
     const game = createGame();
-    const socket = { readyState: WebSocket.OPEN } as WebSocket;
-    game.initiator.websocket = socket;
-    game.invited.websocket = socket;
+    const connection = createOpenConnection();
+    game.initiator.connection = connection;
+    game.invited.connection = connection;
 
     const result = new GameRules().startIfReady(game, 200);
 
@@ -67,7 +71,7 @@ describe('GameRules', () => {
     const result = new GameRules().disconnect(game, 0, 300);
 
     expect(result).toEqual({ statusChanged: true, status: 'expired' });
-    expect(game.initiator.websocket).toBeNull();
+    expect(game.initiator.connection).toBeNull();
   });
 
   it('finishes an active game when a player disconnects', () => {
@@ -138,9 +142,9 @@ describe('GameRules', () => {
     expect(game.rematchReady).toEqual([true, false]);
     expect(game.status).toBe('finished');
 
-    const socket = { readyState: WebSocket.OPEN } as WebSocket;
-    game.initiator.websocket = socket;
-    game.invited.websocket = socket;
+    const connection = createOpenConnection();
+    game.initiator.connection = connection;
+    game.invited.connection = connection;
     const started = rules.requestRematch(game, 1, 900);
 
     expect(started.kind).toBe('started');
@@ -184,7 +188,7 @@ describe('GameRules', () => {
     game.lobbySlots = [
       { playerId: 0, session: game.initiator, status: 'ready', active: true, eliminated: false },
       { playerId: 1, session: game.invited, status: 'ready', active: true, eliminated: false },
-      { playerId: 2, session: { name: 'Charlie', sessionTokenHash: 'charlie-hash', websocket: null }, status: 'ready', active: true, eliminated: false }
+      { playerId: 2, session: { name: 'Charlie', sessionTokenHash: 'charlie-hash', connection: null }, status: 'ready', active: true, eliminated: false }
     ];
     game.rematchAnswers = [null, null, null];
     game.rematchReady = [false, false, false];
