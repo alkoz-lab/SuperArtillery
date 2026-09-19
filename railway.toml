@@ -1,7 +1,7 @@
 [build]
-buildCommand = "cd server && npm ci && npm run build"
+buildCommand = "npm ci && npm run contracts:generate && npm run build --workspace superartillery-server"
 
 [deploy]
-startCommand = "cd server && npm start"
+startCommand = "npm start --workspace superartillery-server"
 healthcheckPath = "/api/v1/health"
 restartPolicyType = "ON_FAILURE"

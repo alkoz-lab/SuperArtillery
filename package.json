@@ -1,10 +1,23 @@
 {
+  "name": "superartillery-monorepo",
   "private": true,
+  "workspaces": [
+    "packages/core",
+    "packages/server",
+    "packages/client"
+  ],
   "scripts": {
-    "contracts:generate": "node ./scripts/generate-contract-version.mjs && openapi-typescript ./contracts/openapi/superartillery.yaml -o ./server/src/types/generated/openapi.d.ts && openapi-typescript ./contracts/openapi/superartillery.yaml -o ./client/src/ts/types/generated/openapi.d.ts"
+    "contracts:generate": "node ./scripts/generate-contract-version.mjs && openapi-typescript ./contracts/openapi/superartillery.yaml -o ./packages/core/src/contract/generated/openapi.d.ts",
+    "build": "npm run contracts:generate && npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "type-check": "npm run type-check --workspaces --if-present"
   },
   "devDependencies": {
     "openapi-typescript": "^7.10.1",
     "yaml": "^2.9.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "@scarf/scarf@1.4.0": true
   }
 }

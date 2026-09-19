@@ -8,9 +8,6 @@ jobs:
   server-build:
     name: Server Build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -20,31 +17,31 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install contract generator
-        working-directory: .
+      - name: Install workspace dependencies
         run: npm ci
 
-      - name: Install server dependencies
-        run: npm ci
+      - name: Generate contracts
+        run: npm run contracts:generate
 
       - name: Determine build version
-        working-directory: .
         run: |
-          VERSION=$(node -p "require('./server/package.json').version")
+          VERSION=$(node -p "require('./packages/server/package.json').version")
           echo "BUILD_VERSION=${VERSION}+build.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
           echo "Building server version ${VERSION}+build.${GITHUB_RUN_NUMBER}"
 
       - name: Build server
-        run: npm run build
+        run: npm run build --workspace superartillery-server
+
+      - name: Test core and server
+        run: |
+          npm test --workspace @superartillery/core
+          npm test --workspace superartillery-server
 
   client-build:
     name: Client Build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: client
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -54,21 +51,22 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: client/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install contract generator
-        working-directory: .
+      - name: Install workspace dependencies
         run: npm ci
 
-      - name: Install client dependencies
-        run: npm ci
+      - name: Generate contracts
+        run: npm run contracts:generate
 
       - name: Determine build version
-        working-directory: .
         run: |
-          VERSION=$(node -p "require('./client/package.json').version")
+          VERSION=$(node -p "require('./packages/client/package.json').version")
           echo "BUILD_VERSION=${VERSION}+build.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
           echo "Building client version ${VERSION}+build.${GITHUB_RUN_NUMBER}"
 
       - name: Build client
-        run: npm run build
+        run: npm run build --workspace superartillery-client
+
+      - name: Test client
+        run: npm test --workspace superartillery-client

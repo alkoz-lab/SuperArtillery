@@ -12,24 +12,20 @@ Prerequisites:
 - Node.js 26+
 - npm 10+
 
-Install dependencies:
+Install dependencies (a single install covers every workspace):
 
 ```bash
 npm install
-cd server && npm install
-cd ../client && npm install
 ```
 
 Run locally in two terminals:
 
 ```bash
-cd server
-npm run dev
+npm run dev --workspace superartillery-server
 ```
 
 ```bash
-cd client
-npm run dev
+npm run dev --workspace superartillery-client
 ```
 
 Server: http://localhost:3000
@@ -46,8 +42,9 @@ Cloud deployment:
 
 Primary docs are in subfolders:
 
-- [server/README.md](server/README.md): server setup, endpoints, runtime notes
-- [client/README.md](client/README.md): client setup and runtime expectations
+- [packages/core/README.md](packages/core/README.md): transport-independent game core shared by server and client
+- [packages/server/README.md](packages/server/README.md): server setup, endpoints, runtime notes
+- [packages/client/README.md](packages/client/README.md): client setup and runtime expectations
 - [contracts/README.md](contracts/README.md): contract-first workflow and generation
 
 Contract source of truth:
@@ -63,13 +60,13 @@ Supporting docs:
 
 ```bash
 npm run contracts:generate
-cd server && npm run build
-cd ../client && npm run build
+npm run build
+npm test
 ```
 
 ## Deploy Server To Railway And Client To GitHub Pages
 
-This repository includes a GitHub Actions workflow that deploys the server to Railway and builds and deploys the Vite client from `client/` to GitHub Pages.
+This repository includes a GitHub Actions workflow that deploys the server to Railway and builds and deploys the Vite client from `packages/client/` to GitHub Pages.
 
 URL of service deployed to Railway: [https://superartillery-server-production.up.railway.app/](https://superartillery-server-production.up.railway.app/api/v1/health)
 

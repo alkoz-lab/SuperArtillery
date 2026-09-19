@@ -11,9 +11,9 @@ if (typeof contractVersion !== 'string' || !contractVersion.trim()) {
 
 const generatedSource = `// Generated from contracts/openapi/superartillery.yaml. Do not edit manually.\nexport const CONTRACT_VERSION = ${JSON.stringify(contractVersion)};\n`;
 
-await Promise.all([
-  writeFile(new URL('../server/src/contract-version.ts', import.meta.url), generatedSource),
-  writeFile(new URL('../client/src/ts/contract-version.ts', import.meta.url), generatedSource)
-]);
+await writeFile(
+  new URL('../packages/core/src/contract/contract-version.ts', import.meta.url),
+  generatedSource
+);
 
 console.log(`Generated contract version ${contractVersion}`);
